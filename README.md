@@ -262,3 +262,19 @@ KILL process_id;
 
 ---
 
+| Command        | Description                                                        |
+| -------------- | ------------------------------------------------------------------ |
+| `\g`           | End and execute the current statement (same as `;`)                |
+| `\G`           | End and execute the current statement, show results **vertically** |
+| `\c`           | Cancel the current input/query buffer                              |
+| `\e`           | Open default system editor to edit current input                   |
+| `\p`           | Print the current query buffer without running it                  |
+| `\s`           | Show current connection and status info                            |
+| `\T filename`  | Output results to a file (`tee`)                                   |
+| `\t`           | Disable writing output to file (stop tee)                          |
+| `\!`           | Execute a system shell command                                     |
+| `\P pager`     | Set the pager (e.g., `less`, `more`, or custom)                    |
+| `\n`           | Enable/disable column names in result (toggle)                     |
+| `\q` or `exit` | Quit MySQL client                                                  |
+
+
