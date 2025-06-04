@@ -278,3 +278,271 @@ KILL process_id;
 | `\q` or `exit` | Quit MySQL client                                                  |
 
 
+
+Got it! Since we've already covered common and advanced **basic SQL commands**, here’s a curated list of **lesser-known but powerful SQL features**, especially those **unique or advanced in MySQL** that are often overlooked.
+
+---
+
+## 🧮 1. **CASE Expressions**
+
+```sql
+SELECT name,
+       CASE 
+           WHEN age < 18 THEN 'Minor'
+           WHEN age BETWEEN 18 AND 64 THEN 'Adult'
+           ELSE 'Senior'
+       END AS age_group
+FROM people;
+```
+
+* Acts like `if-else` for SQL queries.
+* Very useful for derived columns or conditional logic.
+
+---
+
+## ⛓️ 2. **Common Table Expressions (CTEs)** – MySQL 8.0+
+
+```sql
+WITH recent_orders AS (
+    SELECT * FROM orders WHERE order_date > CURDATE() - INTERVAL 7 DAY
+)
+SELECT * FROM recent_orders WHERE total > 100;
+```
+
+* Cleaner queries, especially with **subqueries**, **recursive logic**, etc.
+
+---
+
+## 🔄 3. **Recursive CTEs** – For hierarchical data
+
+```sql
+WITH RECURSIVE category_path (id, name, parent_id) AS (
+  SELECT id, name, parent_id FROM categories WHERE id = 5
+  UNION ALL
+  SELECT c.id, c.name, c.parent_id
+  FROM categories c
+  INNER JOIN category_path cp ON cp.parent_id = c.id
+)
+SELECT * FROM category_path;
+```
+
+* Useful for **tree structures**, such as categories, menus, organizational charts.
+
+---
+
+## 🧾 4. **JSON Functions in MySQL**
+
+```sql
+-- Store JSON
+INSERT INTO products (info) VALUES ('{"color":"red","size":"L"}');
+
+-- Query JSON
+SELECT info->>'$.color' AS color FROM products;
+
+-- Update JSON field
+UPDATE products SET info = JSON_SET(info, '$.color', 'blue');
+```
+
+* MySQL has full **JSON** support including `JSON_EXTRACT`, `JSON_ARRAY`, `JSON_OBJECT`, etc.
+
+---
+
+## 🔎 5. **FULLTEXT Search**
+
+```sql
+-- Enable full-text index
+ALTER TABLE articles ADD FULLTEXT(title, body);
+
+-- Use MATCH AGAINST
+SELECT * FROM articles
+WHERE MATCH(title, body) AGAINST('MySQL fulltext' IN NATURAL LANGUAGE MODE);
+```
+
+* Useful for **basic text search** without external search engines.
+
+---
+
+## ⏱️ 6. **Generated (Virtual) Columns**
+
+```sql
+CREATE TABLE users (
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    full_name VARCHAR(100) GENERATED ALWAYS AS (CONCAT(first_name, ' ', last_name)) STORED
+);
+```
+
+* Automatically computed values, **no need to update manually**.
+
+---
+
+## 🔁 7. **Stored Procedures**
+
+```sql
+DELIMITER //
+
+CREATE PROCEDURE GetUsersByAge(IN min_age INT)
+BEGIN
+  SELECT * FROM users WHERE age >= min_age;
+END //
+
+DELIMITER ;
+
+CALL GetUsersByAge(25);
+```
+
+* Useful for reusable logic on the **database server** side.
+
+---
+
+## 🚦 8. **Triggers**
+
+```sql
+CREATE TRIGGER before_insert_user
+BEFORE INSERT ON users
+FOR EACH ROW
+SET NEW.created_at = NOW();
+```
+
+* Automate actions **before/after** insert, update, or delete.
+
+---
+
+## 🔒 9. **Views**
+
+```sql
+CREATE VIEW active_users AS
+SELECT id, name FROM users WHERE is_active = 1;
+
+-- Use like a table
+SELECT * FROM active_users;
+```
+
+* Acts like a **virtual table**, great for abstraction and reuse.
+
+---
+
+## 🔗 10. **Index Hints**
+
+```sql
+SELECT * FROM users USE INDEX (idx_name) WHERE age > 30;
+```
+
+* Control **which index** MySQL should use, for performance tuning.
+
+---
+Perfect — let’s take this further with concise examples and explanations for:
+
+* ✅ **Window Functions**
+* ✅ **Event Scheduler**
+* ✅ **Optimizer Hints**
+
+These are **powerful tools** in MySQL 8.0+ that can drastically improve how you write and optimize SQL.
+
+---
+
+## 🪟 1. **Window Functions** (MySQL 8.0+)
+
+Window functions perform **calculations across rows related to the current row**, without collapsing them (unlike `GROUP BY`).
+
+### 🔹 Example: Running Total
+
+```sql
+SELECT 
+  employee_id,
+  department,
+  salary,
+  SUM(salary) OVER (PARTITION BY department ORDER BY salary) AS running_total
+FROM employees;
+```
+
+### 🔹 Useful Window Functions
+
+| Function                         | Description                           |
+| -------------------------------- | ------------------------------------- |
+| `ROW_NUMBER()`                   | Row number in partition               |
+| `RANK()` / `DENSE_RANK()`        | Ranking (with/without gaps)           |
+| `LAG()` / `LEAD()`               | Previous or next row's value          |
+| `FIRST_VALUE()` / `LAST_VALUE()` | Value from the start/end of partition |
+| `NTILE(n)`                       | Divides rows into n buckets           |
+
+---
+
+These are powerful tools in MySQL 8.0+ that can drastically improve how you write and optimize SQL.
+
+🪟 1. Window Functions (MySQL 8.0+)
+Window functions perform calculations across rows related to the current row, without collapsing them (unlike GROUP BY).
+
+🔹 Example: Running Total
+sql
+Copy
+Edit
+SELECT 
+  employee_id,
+  department,
+  salary,
+  SUM(salary) OVER (PARTITION BY department ORDER BY salary) AS running_total
+FROM employees;
+🔹 Useful Window Functions
+Function	Description
+ROW_NUMBER()	Row number in partition
+RANK() / DENSE_RANK()	Ranking (with/without gaps)
+LAG() / LEAD()	Previous or next row's value
+FIRST_VALUE() / LAST_VALUE()	Value from the start/end of partition
+NTILE(n)	Divides rows into n buckets
+
+
+
+## ⏱️ 2. **Event Scheduler** (MySQL's built-in job scheduler)
+
+Like a lightweight cron job **inside MySQL**.
+
+### 🔹 Enable Event Scheduler
+
+```sql
+SET GLOBAL event_scheduler = ON;
+```
+
+### 🔹 Create a Recurring Event
+
+```sql
+CREATE EVENT archive_old_orders
+ON SCHEDULE EVERY 1 DAY
+DO
+  DELETE FROM orders WHERE order_date < CURDATE() - INTERVAL 30 DAY;
+```
+
+### 🔹 One-Time Event Example
+
+```sql
+CREATE EVENT send_reminder_email
+ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 10 MINUTE
+DO
+  CALL send_email_reminders();
+```
+
+---
+
+## ⚙️ 3. **Optimizer Hints** (Control MySQL execution plan)
+
+Optimizer hints help guide the query planner for performance.
+
+### 🔹 Example: Force Index Usage
+
+```sql
+SELECT /*+ INDEX(users idx_age) */ * FROM users WHERE age > 30;
+```
+
+### 🔹 Other Hints
+
+| Hint                         | Example                                                        |
+| ---------------------------- | -------------------------------------------------------------- |
+| `STRAIGHT_JOIN`              | `SELECT /*+ STRAIGHT_JOIN */ ...` – Use joins in written order |
+| `JOIN_ORDER`                 | `/*+ JOIN_ORDER(t1, t2, t3) */` – Control join sequence        |
+| `NO_ICP(t)`                  | `/*+ NO_ICP(t1) */` – Disable index condition pushdown         |
+| `QB_NAME(qb)`                | Label query blocks for other hints                             |
+| `DERIVED_CONDITION_PUSHDOWN` | Push WHERE into derived tables manually                        |
+
+---
+
+
